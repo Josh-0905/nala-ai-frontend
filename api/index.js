@@ -1,14 +1,4 @@
-const fs = require('fs');
-const path = require('path');
-
-// Load 321 static recipes
-let recipes = [];
-try {
-  const dataPath = path.resolve(__dirname, 'data/recipes.json');
-  recipes = JSON.parse(fs.readFileSync(dataPath, 'utf8'));
-} catch (e) {
-  console.error('Error loading recipes data:', e);
-}
+import { recipes } from './data/recipes.js';
 
 // In-memory demo store for shopping list and reviews
 const shoppingList = [
@@ -23,7 +13,7 @@ const foodWasteItems = [
   { id: 'fw-3', name: 'Coriander', category: 'Vegetables', daysUntilExpiry: 4, quantity: '1 bunch', status: 'fresh' },
 ];
 
-module.exports = async function handler(req, res) {
+export default async function handler(req, res) {
   // CORS Headers
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
@@ -368,4 +358,4 @@ module.exports = async function handler(req, res) {
     message: 'NALA AI API Response',
     endpoint: pathname
   });
-};
+}
