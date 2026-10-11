@@ -215,12 +215,19 @@ export default async function handler(req, res) {
       const matchPct = recipeIngs.length > 0 ? Math.round((matched.length / recipeIngs.length) * 100) : 0;
       
       return {
+        recipe: recipe,
         ...recipe,
         matchPercentage: matchPct,
+        score: matchPct,
+        is100PercentMatch: missing.length === 0,
+        missingCount: missing.length,
+        ingredientStatus: {
+          available: matched.map(m => ({ name: m, quantity: 1, unit: '' })),
+          missing: missing.map(m => ({ name: m.name, quantity: m.quantity || 1, unit: m.unit || '' })),
+        },
         matchedIngredients: matched,
         missingIngredients: missing,
-        canMakeNow: missing.length === 0,
-        score: matchPct
+        canMakeNow: missing.length === 0
       };
     });
 

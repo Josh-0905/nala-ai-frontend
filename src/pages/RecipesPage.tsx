@@ -70,6 +70,27 @@ export const RecipesPage: React.FC<RecipesPageProps> = ({
     }
   }, [ingredients, mealType, cuisine, maxCookingTime, difficulty, dietType, budget, servings]);
 
+  const normalizeScoredRecipe = (item: any): ScoredRecipe => {
+    const r: Recipe = item.recipe ? item.recipe : item;
+    const matchPercentage = typeof item.matchPercentage === 'number' ? item.matchPercentage : (item.score || 0);
+    const available = item.ingredientStatus?.available || (Array.isArray(item.matchedIngredients) ? item.matchedIngredients.map((name: any) => ({ name: typeof name === 'string' ? name : name?.name || '', quantity: 1, unit: '' })) : []);
+    const missing = item.ingredientStatus?.missing || (Array.isArray(item.missingIngredients) ? item.missingIngredients.map((name: any) => ({ name: typeof name === 'string' ? name : name?.name || '', quantity: 1, unit: '' })) : []);
+    
+    return {
+      recipe: r,
+      score: typeof item.score === 'number' ? item.score : matchPercentage,
+      matchPercentage,
+      is100PercentMatch: item.is100PercentMatch || (missing.length === 0 && matchPercentage >= 80),
+      missingCount: item.missingCount !== undefined ? item.missingCount : missing.length,
+      ingredientStatus: {
+        available,
+        missing,
+      },
+      scoreBreakdown: item.scoreBreakdown,
+      isSaved: item.isSaved,
+    };
+  };
+
   const fetchRecommendations = async () => {
     setIsLoading(true);
     try {
@@ -84,14 +105,14 @@ export const RecipesPage: React.FC<RecipesPageProps> = ({
           budget,
           servings,
         });
-        setRecipes(res.recommendations);
+        setRecipes((res.recommendations || []).map(normalizeScoredRecipe));
       } else {
         // Fallback to all recipes when no ingredients scanned
         const allRes = await api.getAllRecipes({
           cuisine: cuisine === 'Any' ? undefined : cuisine,
           dietType: dietType === 'Any' ? undefined : dietType,
         });
-        const mapped: ScoredRecipe[] = allRes.recipes.map((r) => ({
+        const mapped: ScoredRecipe[] = (allRes.recipes || []).map((r) => ({
           recipe: r,
           score: 100,
           matchPercentage: 100,
@@ -186,12 +207,13 @@ export const RecipesPage: React.FC<RecipesPageProps> = ({
 
   // Filter recipes by user search input
   const filteredRecipes = recipes.filter((item) => {
+    if (!item?.recipe?.name) return false;
     if (!searchQuery.trim()) return true;
     const q = searchQuery.toLowerCase();
     return (
-      item.recipe.name.toLowerCase().includes(q) ||
-      item.recipe.cuisine.toLowerCase().includes(q) ||
-      item.recipe.description.toLowerCase().includes(q)
+      (item.recipe.name || '').toLowerCase().includes(q) ||
+      (item.recipe.cuisine || '').toLowerCase().includes(q) ||
+      (item.recipe.description || '').toLowerCase().includes(q)
     );
   });
 
@@ -211,8 +233,8 @@ export const RecipesPage: React.FC<RecipesPageProps> = ({
 
   // 3. Authentic Telangana recipes
   const telanganaList = filteredRecipes.filter((item) => {
-    const c = (item.recipe.cuisine || '').toLowerCase();
-    const hasTag = item.recipe.tags && Array.isArray(item.recipe.tags) && item.recipe.tags.some((t: string) => t.toLowerCase().includes('telangana'));
+    const c = (item.recipe?.cuisine || '').toLowerCase();
+    const hasTag = item.recipe?.tags && Array.isArray(item.recipe.tags) && item.recipe.tags.some((t: string) => t.toLowerCase().includes('telangana'));
     return c.includes('telangana') || hasTag;
   });
 

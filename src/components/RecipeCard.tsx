@@ -16,15 +16,20 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({
   onToggleFavorite,
   isSaved = false,
 }) => {
-  const { recipe, matchPercentage, ingredientStatus, score, is100PercentMatch } = scoredRecipe;
+  const recipe = scoredRecipe.recipe || (scoredRecipe as any);
+  if (!recipe || !recipe.id) return null;
+
+  const matchPercentage = scoredRecipe.matchPercentage !== undefined ? scoredRecipe.matchPercentage : ((scoredRecipe as any).score || 0);
+  const ingredientStatus = scoredRecipe.ingredientStatus || { available: [], missing: [] };
+  const is100PercentMatch = scoredRecipe.is100PercentMatch;
   const availableCount = ingredientStatus?.available?.length || 0;
   const missingItems = ingredientStatus?.missing || [];
   const missingCount = scoredRecipe.missingCount !== undefined ? scoredRecipe.missingCount : missingItems.length;
   const totalIng = availableCount + missingCount;
   const isExact100 = is100PercentMatch || (totalIng > 0 && missingCount === 0);
   const isTelangana =
-    recipe.cuisine?.toLowerCase().includes('telangana') ||
-    (recipe.tags && recipe.tags.some((t) => t.toLowerCase().includes('telangana')));
+    (recipe.cuisine || '').toLowerCase().includes('telangana') ||
+    (recipe.tags && Array.isArray(recipe.tags) && recipe.tags.some((t: string) => t.toLowerCase().includes('telangana')));
 
   return (
     <div
