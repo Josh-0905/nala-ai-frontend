@@ -1,4 +1,4 @@
-import { recipes } from './data/recipes.js';
+import { recipes } from '../lib/recipesData.js';
 
 // In-memory demo store for shopping list and reviews
 const shoppingList = [
